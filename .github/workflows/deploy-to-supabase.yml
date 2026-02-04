@@ -1,4 +1,4 @@
-name: Deploy Edge Functions to Supabase
+name: Deploy to Supabase (Full Clone)
 on:
   repository_dispatch:
     types: [deploy-to-supabase]
@@ -8,13 +8,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
       - name: Install Supabase CLI
         run: npm install -g supabase
-      - name: Deploy Functions
+      - name: List files
+        run: ls -R
+      - name: Deploy Database (Migrations)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ github.event.client_payload.supabase_token }}
         run: |
-          echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
+          supabase db push --project-ref "${{ github.event.client_payload.project_id }}" --password "${{ github.event.client_payload.db_password }}"
+      - name: Deploy Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ github.event.client_payload.supabase_token }}
+        run: |
           supabase functions deploy --project-ref "${{ github.event.client_payload.project_id }}" --no-verify-jwt
