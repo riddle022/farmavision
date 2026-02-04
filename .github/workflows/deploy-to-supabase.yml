@@ -1,0 +1,20 @@
+name: Deploy Edge Functions to Supabase
+on:
+  repository_dispatch:
+    types: [deploy-to-supabase]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+      - name: Deploy Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ github.event.client_payload.supabase_token }}
+        run: |
+          echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
+          supabase functions deploy --project-ref "${{ github.event.client_payload.project_id }}" --no-verify-jwt
