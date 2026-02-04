@@ -11,11 +11,21 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - name: Install Supabase CLI
-        run: npm install -g supabase
+          node-version: 20
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - name: List files
         run: ls -R
+      - name: Initialize Supabase Config (if missing)
+        run: |
+          if [ ! -f "supabase/config.toml" ]; then
+            echo "Config missing. Creating dummy config..."
+            mkdir -p supabase
+            echo '[project]' > supabase/config.toml
+            echo "id = "${{ github.event.client_payload.project_id }}"" >> supabase/config.toml
+          fi
       - name: Deploy Database (Migrations)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ github.event.client_payload.supabase_token }}
